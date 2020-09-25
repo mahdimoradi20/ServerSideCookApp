@@ -52,8 +52,7 @@ def PushNotif(content_for_push):
     baseURLforPush = 'https://fcm.googleapis.com/fcm/send'
     myobj = {'to': to , 'data' : data }
     x = requests.post(baseURLforPush, json = myobj, headers = {"Content-Type": "application/json" , "Authorization" : "Key=" + config.SERVER_KEY})
-    print(x)
-    print(x.text)
+    wLog("info" , "a push notofication has been sended with return text ->" + x.text)
     return x.text
 
 def getRecipes():
@@ -217,6 +216,15 @@ def insertRec():
             return render_template( "insertNew.html")
         finally:
             db.close()
+
+@app.route("/")
+def indexPage():
+    return redirect("/login")
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html')
 
 @app.route('/saveUserToken/<apikey>/<token>')
 def get_token(apikey,token):
