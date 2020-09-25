@@ -1,0 +1,40 @@
+ {% include 'headandnav.html' %}
+                <main>
+                    <form action = "/sendPushNotif" method = "POST" >
+                    <div class="container">
+                        <div class="row">
+                            <table class="table table-bordered">
+                                <thead>
+                                <tr>
+                                    <th scope="col-1">شماره</th>
+                                    <th scope="col-1">عنوان</th>
+                                    <th scope="col-1">دسته</th>
+                                    <th scope="col-1">مواد مورد نیاز</th>
+                                    <th scope="col-6">دستورپخت</th>
+                                    <th scope="col-1">در صف ارسال</td>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for rec in recipes %}
+                                    <tr>
+                                        <!--<td>{{rec[0]}}<input type="checkbox" /></td>-->
+                                        <td><div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name = "itemstosend{{rec[0]}}" value = "{{rec[0]}}" >
+                                                 <label class="form-check-label" for="{{rec[0]}}">{{rec[0]}}</label></td>
+                                        <td>{{rec[1]}}</td>
+                                        <td>{{rec[2]}}</td>
+                                        <td>{{rec[3]}}</td>
+                                        <td>{{rec[4]}}</td>
+                                        <td>{{rec[5]}}</td>
+                                    
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                        </div>
+                        </div>
+                        <input type = "submit" value = "ثبت درخواست" />
+                        </form>
+                </main>
+               {% include 'footer.html' %}

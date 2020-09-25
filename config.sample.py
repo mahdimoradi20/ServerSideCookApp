@@ -1,0 +1,9 @@
+APP_SECRET = "secret key for flask app"
+USERNAME = "your username "
+PASSWORD = "your password"
+MYSQL_HOST = "localhost"
+MYSQL_USERNAME = "dbuser"
+MYSQL_PASSWORD = ""
+MYSQL_DB_NAME = "cookAppDB"
+API_KEY = 'app api key'
+SERVER_KEY = "server api key"
