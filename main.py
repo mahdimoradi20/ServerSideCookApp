@@ -8,8 +8,8 @@ from flask_login import (
     login_user,
     logout_user
 )
-import MySQLdb
 import requests
+import sqlite3
 
 
 
@@ -17,7 +17,7 @@ import requests
 def wLog(title , content):
     db  = get_database_connection();
     cur = db.cursor()
-    cur.execute("INSERT INTO logs (title , content) values(%s , %s)" , (title,content))
+    cur.execute("INSERT INTO logs (title , content) values(? , ?)" , (title,content))
     db.commit()
     db.close()
 
@@ -27,14 +27,14 @@ def addToPoll(ids):
     cur = db.cursor()
     for food_id in ids:
         try:
-            cur.execute("INSERT INTO sendPoll (id) VALUES (%s)" , (food_id))
+            cur.execute("INSERT INTO sendPoll (id) VALUES (?)" , (food_id))
             db.commit()
         except Exception as e:
             wLog("error" , f"when we wanted to insert data to sendPoll we got this error{e}")
     
     for food_id in ids:
         try:
-            cur.execute("UPDATE recipes set isPolling='true' where id=%s" , (food_id))
+            cur.execute("UPDATE recipes set isPolling='true' where id={0}".format(food_id))
             db.commit()
         except Exception as e:
             wLog("error" , f"when we wanted to update reciped after polling we got this error {e}")
@@ -65,12 +65,10 @@ def getRecipes():
     return dt
 
 def get_database_connection():
-    """connects to the MySQL database and returns the connection"""
-    return MySQLdb.connect(host=config.MYSQL_HOST,
-                           user=config.MYSQL_USERNAME,
-                           passwd=config.MYSQL_PASSWORD,
-                           db=config.MYSQL_DB_NAME,
-                           charset='utf8')
+    """Connect to the sqlite database and return this connection"""
+    conn = sqlite3.connect(database= "databases/server.db")
+    return conn
+
 
 app = Flask(__name__ , static_url_path="")
 app.secret_key = config.APP_SECRET
@@ -203,12 +201,13 @@ def insertRec():
         cat = request.form['cat']
         ing = request.form['ing']
         rec = request.form['rec']
+        db = get_database_connection()
         try:
-            db = get_database_connection()
             cur = db.cursor()
             cur.execute("""INSERT INTO Recipes (title , pic , catid , ing , rec , isPolling) VALUES
-                            (%s , %s , %s , %s ,%s ,%s) """ , (title , pic , cat , ing , rec , 'false'))
-            db.close()
+                            (? ,? , ? , ? ,? ,?) """ , (title , pic , cat , ing , rec , 'false'))
+            db.commit()
+            
             wLog("info",f"user insrted recipe with title '{title}' in data base")
             flash("با موفقیت درج شد" , "info")
             return render_template("insertNew.html")
@@ -216,6 +215,8 @@ def insertRec():
             wLog("error" , f"when user wanted to insert recipe this error happend -> {e} ")
             flash("خطایی رخ داد و درج نشد" , "danger")
             return render_template( "insertNew.html")
+        finally:
+            db.close()
 
 @app.route('/saveUserToken/<apikey>/<token>')
 def get_token(apikey,token):
@@ -230,14 +231,17 @@ def get_token(apikey,token):
 def saveToken(token):
 
     arguments =(token , "")
+    db = get_database_connection()
     try:
-        db = get_database_connection()
+        
         cur = db.cursor()
-        cur.execute("INSERT INTO Users (token,username) values (%s,%s)" , arguments)
+        cur.execute("INSERT INTO Users (token,username) values (?,?)" , arguments)
         db.commit()
         return "well"
     except Exception as e:
         return "ERR"
+    finally:
+        db.close()
 
 
 
@@ -247,41 +251,40 @@ if __name__ == "__main__":
     cur = db.cursor()
     cur.execute("""
     CREATE TABLE IF NOT EXISTS Recipes (
-    id INT(15) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    title TEXT ,
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	title TEXT ,
     pic TEXT,
     catid INT,
     ing TEXT,
     rec TEXT,
     res1 TEXT,
     res2 TEXT,
-    isPolling VARCHAR(16),
-    reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    isPolling TEXT,
+    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS logs (
-    id INT(15) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT ,
     content TEXT,
-    reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS sendPoll (
-    id INT(15) UNIQUE,
+    id INTEGER PRIMARY KEY,
     cRecived TEXT ,
-    reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS Users (
-    id INT(15) UNIQUE,
+    id INTEGR PRIMARY KEY,
     token TEXT ,
     username TEXT,
-    reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
-    db.commit()
     db.close()
     app.run(host="0.0.0.0" , port= "8080" , debug=True)
