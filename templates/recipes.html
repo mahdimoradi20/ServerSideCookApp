@@ -11,7 +11,8 @@
                                     <th scope="col-1">دسته</th>
                                     <th scope="col-1">مواد مورد نیاز</th>
                                     <th scope="col-6">دستورپخت</th>
-                                    <th scope="col-1">در صف ارسال</td>
+                                    <th scope="col-1">در صف ارسال</th>
+                                    <th scope"col-1" >ویرایش</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -26,6 +27,7 @@
                                         <td>{{rec[3]}}</td>
                                         <td>{{rec[4]}}</td>
                                         <td>{{rec[5]}}</td>
+                                        <td><a href = "/editrec/{{rec[0]}}">ویرایش</a></td>
                                     
                                     </tr>
                                 {% endfor %}

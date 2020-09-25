@@ -55,13 +55,8 @@ def PushNotif(content_for_push):
     wLog("info" , "a push notofication has been sended with return text ->" + x.text)
     return x.text
 
-def getRecipes():
-    db = get_database_connection()
-    cur = db.cursor()
-    cur.execute("SELECT id ,title, catid , ing , rec , isPolling FROM Recipes")
-    dt = cur.fetchall()
-    db.close()
-    return dt
+
+
 
 def get_database_connection():
     """Connect to the sqlite database and return this connection"""
@@ -220,6 +215,54 @@ def insertRec():
 @app.route("/")
 def indexPage():
     return redirect("/login")
+
+
+
+def getRecipes():
+    db = get_database_connection()
+    cur = db.cursor()
+    cur.execute("SELECT id ,title, catid , ing , rec , isPolling FROM Recipes")
+    dt = cur.fetchall()
+    db.close()
+    return dt
+
+def getRecipesById(fid):
+    db = get_database_connection()
+    cur = db.cursor()
+    cur.execute("SELECT id ,title, catid , pic , ing , rec , isPolling FROM Recipes WHERE id = ?" , fid)
+    dt = cur.fetchone()
+    db.close()
+    return dt
+
+
+@app.route("/editrec/<fid>" , methods = ['GET' , 'POST'])
+@login_required
+def editrec(fid):
+    if request.method == 'POST':
+        title = request.form['title']
+        pic = request.form['pic']
+        cat = request.form['cat']
+        ing = request.form['ing']
+        rec = request.form['rec']
+        db = get_database_connection()
+        try:
+            cur = db.cursor()
+            cur.execute("""UPDATE Recipes set title = ? , pic = ? , catid = ?, ing = ? , rec = ? , isPolling = ?
+                        WHERE id = ? """ , (title , pic , cat , ing , rec , 'false' , fid))
+            db.commit()
+            
+            wLog("info",f"user updated recipe with title '{title}' in data base")
+            flash("ویرایش شد" , "info")
+            return render_template("edit.html" , data = {"fid" : fid , 'recipe' : getRecipesById(fid)})
+        except Exception as e:
+            wLog("error" , f"when user wanted to update recipe this error happend -> {e} ")
+            flash("خطایی رخ داد و درج نشد" , "danger")
+            return render_template( "edit.html" , data = {"fid" : fid , 'recipe' : getRecipesById(fid)})
+        finally:
+            db.close()
+    elif request.method == 'GET':
+        
+        return render_template('edit.html' , data = {"fid" : fid , 'recipe' : getRecipesById(fid)})
 
 
 @app.errorhandler(404)

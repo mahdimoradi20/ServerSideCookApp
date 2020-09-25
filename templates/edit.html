@@ -1,0 +1,26 @@
+{% include 'headandnav.html' %}
+                <main style = "background-color : #caedd7">
+                  <!--This is the section that i include what i want to-->
+
+
+                    <div class="container" >
+                
+                      {% include 'alert.html' %}
+                    <form action = "/editrec/{{data.fid}}" method="POST" >
+                        <label style="font-size: larger;float:right;" ><b>:عنوان</b></label>
+                        <input type="text" class="form-control" dir="rtl" name="title" value = "{{data.recipe[1]}}" /><br/>
+                        <label style="font-size: larger;float:right; " dir="rtl"><b>آدرس تصویر برای دستور پخت</b></label>
+                        <input type="text" class="form-control" dir="rtl" name="pic" value = "{{data.recipe[3]}}" /><br/>
+                        <label style="font-size: larger;float:right; " dir="rtl"><b> دسته:</b></label>
+                        <input type="text" class="form-control" dir="rtl" name="cat" value = "{{data.recipe[2]}}" /><br/>
+                        <label style="font-size: larger;float:right; " dir="rtl"><b>مواد لازم برای پخت:</b></label>
+                        <input type="text" class="form-control" dir="rtl" name="ing" style = "height: 100px; " value = "{{data.recipe[4]}}" /><br/>
+                        <label style="font-size: larger;float:right;" dir="rtl"><b>دستور پخت:</b></label>
+                        <textarea id="mytextarea" name="rec" style="height: 400px;width:100%">{{data.recipe[5]}}</textarea><br />
+                        <input type="submit" class="btn btn-primary form-control" value="درج دستور در پایگاه داده" dir="rtl" name="send" style  = "margin-top:20px" />:
+                    </form>
+
+                    </div>
+                  <!--This is the section that i include what i want to-->
+                </main>
+                {% include 'footer.html' %}
