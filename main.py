@@ -15,7 +15,7 @@ import sqlite3
 
 
 def wLog(title , content):
-    db  = get_database_connection();
+    db  = get_database_connection("databases/logs.db");
     cur = db.cursor()
     cur.execute("INSERT INTO logs (title , content) values(? , ?)" , (title,content))
     db.commit()
@@ -58,9 +58,9 @@ def PushNotif(content_for_push):
 
 
 
-def get_database_connection():
+def get_database_connection(pathforDB="databases/server.db"):
     """Connect to the sqlite database and return this connection"""
-    conn = sqlite3.connect(database= "databases/server.db")
+    conn = sqlite3.connect( database = pathforDB)
     return conn
 
 
@@ -311,14 +311,6 @@ if __name__ == "__main__":
     res1 TEXT,
     res2 TEXT,
     isPolling TEXT,
-    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT ,
-    content TEXT,
     Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
