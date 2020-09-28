@@ -1,0 +1,26 @@
+ {% include 'headandnav.html' %}
+        <main>
+        {% include 'alert.html' %}
+          <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">شماره</th>
+      <th scope="col">عنوان</th>
+      <th scope="col">دریافتی</a>
+      <th scope="col">حذف</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for dt in data['data'] %}
+    <tr>
+      <td>{{dt[0]}}</td>
+      <td>{{dt[1]}}</td>
+      <td{{dt[2]}}</td>
+      <td>{{dt[3]}}</td>
+      <td><a href = "/delFromPoll/{{dt[0]}}" >حذف از صف</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+        </main>
+{% include 'footer.html' %}

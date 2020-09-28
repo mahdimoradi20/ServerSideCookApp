@@ -216,7 +216,9 @@ def insertRec():
 def indexPage():
     return redirect("/login")
 
-
+@app.route("/users")
+def usersPage():
+    return render_template("users.html")
 
 def getRecipes():
     db = get_database_connection()
@@ -278,6 +280,31 @@ def get_token(apikey,token):
             return "ERR"
     else:
         return "wrongApiKey"
+
+
+def getPool():
+    
+    db  = get_database_connection();
+    cur = db.cursor()
+    cur.execute("SELECT Recipes.id , Recipes.title, sendPoll.cRecived FROM Recipes  , sendPoll where Recipes.id = sendPoll.id and Recipes.isPolling = 'true'")
+    dt = cur.fetchall()
+    db.close()
+    return dt
+
+@app.route("/delFromPoll/<fid>")
+def delFromPoll(fid):
+    flash("با موفقیت از صف حذف شد" , "info")
+    db = get_database_connection()
+    cur = db.cursor()
+    cur.execute("Update Recipes set isPolling = 'false' where id = ?" , fid)
+    db.commit()
+    db.close()
+    return redirect("/recPoll")
+
+@app.route("/recPoll")
+def getRecPool():
+    dt = getPool()
+    return render_template("recpool.html" , data = {"data" : dt})
 
 def saveToken(token):
 
