@@ -300,6 +300,12 @@ def delFromPoll(fid):
     db.commit()
     db.close()
     return redirect("/recPoll")
+	
+	
+@app.route("/sendStatic/<key>/<value>")
+def getStatic(key , value):
+	print(key , value)
+	return "OK"
 
 @app.route("/recPoll")
 def getRecPool():
