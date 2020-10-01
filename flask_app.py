@@ -15,7 +15,7 @@ import sqlite3
 
 
 def wLog(title , content):
-    db  = get_database_connection("databases/logs.db");
+    db  = get_database_connection(config.LOG_DB_PATH);
     cur = db.cursor()
     cur.execute("INSERT INTO logs (title , content) values(? , ?)" , (title,content))
     db.commit()
@@ -58,7 +58,7 @@ def PushNotif(content_for_push):
 
 
 
-def get_database_connection(pathforDB="databases/server.db"):
+def get_database_connection(pathforDB=config.DATABASE_PATH):
     """Connect to the sqlite database and return this connection"""
     conn = sqlite3.connect( database = pathforDB)
     return conn

@@ -7,3 +7,5 @@ MYSQL_PASSWORD = ""
 MYSQL_DB_NAME = "cookAppDB"
 API_KEY = 'app api key'
 SERVER_KEY = "server api key"
+DATABASE_PATH = "PATH for your main database"
+LOG_DB_PATH = "PATH for your logs database"
