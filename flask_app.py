@@ -31,7 +31,7 @@ def addToPoll(ids):
             db.commit()
         except Exception as e:
             wLog("error" , f"when we wanted to insert data to sendPoll we got this error{e}")
-    
+
     for food_id in ids:
         try:
             cur.execute("UPDATE recipes set isPolling='true' where id={0}".format(food_id))
@@ -44,7 +44,7 @@ def addToPoll(ids):
 
 
 def PushNotif(content_for_push):
-    
+
     addToPoll(content_for_push['items'])
     to = "/topics/getUpdates"
     data = { 'type' : 'getNewRecipe'  , 'content' : "newFoods" , 'count' : str(len(content_for_push['items']))}
@@ -179,7 +179,7 @@ def getNewFoods(apikey):
         db.close()
         for food in foods:
             recipes.append({"id": food[0] , "catid" : food[1] ,"ing":food[2] , "rec":food[3] , "name":food[4] ,"pic" :food[5] , "res1":food[6] , "res2":food[7] })
-        
+
         return jsonify({'recipes' : recipes})
     else:
         return jsonify({'error' : 'not a valid api key, please send us a valid one, maybe you just enter the wrong key'})
@@ -201,7 +201,7 @@ def insertRec():
             cur.execute("""INSERT INTO Recipes (title , pic , catid , ing , rec , isPolling) VALUES
                             (? ,? , ? , ? ,? ,?) """ , (title , pic , cat , ing , rec , 'false'))
             db.commit()
-            
+
             wLog("info",f"user insrted recipe with title '{title}' in data base")
             flash("با موفقیت درج شد" , "info")
             return render_template("insertNew.html")
@@ -237,6 +237,22 @@ def getRecipesById(fid):
     return dt
 
 
+@app.route("/sendStatic/<apiKey>/<key>/<value>")
+def getStatic(apiKey , key , value):
+    if apiKey == config.API_KEY:
+        try:
+            if key == "addCountRecipes":
+                db = get_database_connection()
+                c = db.cursor()
+                c.execute("UPDATE sendPoll SET cRecived = cRecived + 1 where id = ?" , (value))
+                db.commit()
+                db.close()
+                return "OKGOTIT"
+            return "WrongAPIKEY"
+        except Exception as e:
+            wlog("error" , f"while we wanted to add statistics about counting recivers of recipe {value} we got this : {e}")
+            return "There was an error"
+
 @app.route("/editrec/<fid>" , methods = ['GET' , 'POST'])
 @login_required
 def editrec(fid):
@@ -252,7 +268,7 @@ def editrec(fid):
             cur.execute("""UPDATE Recipes set title = ? , pic = ? , catid = ?, ing = ? , rec = ? , isPolling = ?
                         WHERE id = ? """ , (title , pic , cat , ing , rec , 'false' , fid))
             db.commit()
-            
+
             wLog("info",f"user updated recipe with title '{title}' in data base")
             flash("ویرایش شد" , "info")
             return render_template("edit.html" , data = {"fid" : fid , 'recipe' : getRecipesById(fid)})
@@ -263,7 +279,7 @@ def editrec(fid):
         finally:
             db.close()
     elif request.method == 'GET':
-        
+
         return render_template('edit.html' , data = {"fid" : fid , 'recipe' : getRecipesById(fid)})
 
 
@@ -283,7 +299,7 @@ def get_token(apikey,token):
 
 
 def getPool():
-    
+
     db  = get_database_connection();
     cur = db.cursor()
     cur.execute("SELECT Recipes.id , Recipes.title, sendPoll.cRecived FROM Recipes  , sendPoll where Recipes.id = sendPoll.id and Recipes.isPolling = 'true'")
@@ -297,15 +313,11 @@ def delFromPoll(fid):
     db = get_database_connection()
     cur = db.cursor()
     cur.execute("Update Recipes set isPolling = 'false' where id = ?" , fid)
+    cur.execute("DELETE FROM sendPoll where id = ?" , (fid))
     db.commit()
     db.close()
     return redirect("/recPoll")
-	
-	
-@app.route("/sendStatic/<key>/<value>")
-def getStatic(key , value):
-	print(key , value)
-	return "OK"
+
 
 @app.route("/recPoll")
 def getRecPool():
@@ -317,7 +329,7 @@ def saveToken(token):
     arguments =(token , "")
     db = get_database_connection()
     try:
-        
+
         cur = db.cursor()
         cur.execute("INSERT INTO Users (token,username) values (?,?)" , arguments)
         db.commit()
@@ -350,7 +362,7 @@ if __name__ == "__main__":
     cur.execute("""
     CREATE TABLE IF NOT EXISTS sendPoll (
     id INTEGER PRIMARY KEY,
-    cRecived TEXT ,
+    cRecived INTEGER DEFAULT 0 ,
     Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     """)
