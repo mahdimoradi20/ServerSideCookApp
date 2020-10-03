@@ -27,7 +27,7 @@ def addToPoll(ids):
     cur = db.cursor()
     for food_id in ids:
         try:
-            cur.execute("INSERT INTO sendPoll (id) VALUES (?)" , (food_id))
+            cur.execute(f"INSERT INTO sendPoll (id) VALUES ({food_id})" )
             db.commit()
         except Exception as e:
             wLog("error" , f"when we wanted to insert data to sendPoll we got this error{e}")
@@ -55,6 +55,14 @@ def PushNotif(content_for_push):
     wLog("info" , "a push notofication has been sended with return text ->" + x.text)
     return x.text
 
+def PushNotifForMessaging(content):
+    to = content['token']
+    data = { 'type' : 'message'  , 'messageid' : content['messageid']}
+    myobj = {'to': to , 'data' : data }
+    baseURLforPush = 'https://fcm.googleapis.com/fcm/send'
+    x = requests.post(baseURLforPush, json = myobj, headers = {"Content-Type": "application/json" , "Authorization" : "Key=" + config.SERVER_KEY})
+    wLog("info" , "a push notofication has been sended with return text ->" + x.text)
+    return x.text
 
 
 
@@ -117,6 +125,30 @@ def logout():
     return redirect('/login')
 
 #*******This ends here
+
+
+@app.route("/sendMessages/<apiKey>" , methods = ['GET' , 'POST'])
+def getMessages(apiKey):
+    if apiKey == config.API_KEY:
+        if request.method == 'POST':
+            u_token = request.form['token']
+            u_text= request.form['text']
+            u_time = request.form['time']
+            try:
+                db = get_database_connection()
+                cur = db.cursor()
+                cur.execute("INSERT INTO Messages (token,text , time,sender) values (?,?,? , 'user')" , (u_token , u_text , u_time))
+                db.commit()
+                db.close()
+                return "OK"
+            except Exception as e:
+                return "Error"
+        else:
+            return "Send a post Request"
+    else:
+        return "Wrong Api Key"
+
+
 
 @app.route("/panel")
 @login_required
@@ -186,6 +218,50 @@ def getNewFoods(apikey):
 
 
 
+
+@app.route('/sendMessageToUser' , methods = ['GET' , 'POST'])
+@login_required
+def sendMessageToUser():
+    if request.method == 'POST':
+        try:
+            db = get_database_connection()
+            c = db.cursor()
+            text = request.form['text']
+            now = request.form['time']
+            u_token = request.form['token']
+            c.execute("INSERT INTO Messages (text , time , sender, token) VALUES (?,?,'server',?)" , (text,now , u_token))
+            db.commit()
+            c.execute("select last_insert_rowid();")
+            mid = c.fetchall()[0][0]
+            ret = PushNotifForMessaging({'token' : "/topics/getUpdates" , 'messageid' : str(mid) })
+            db.close()
+            return ret
+        except Exception as e:
+            return "ERROR"
+    else:
+        return render_template("SendMessage.html")
+
+
+
+@app.route('/getMessage/<apikey>/<mid>/<u_token>')
+def getMessageByID(apikey, mid, u_token):
+    if apikey ==config.API_KEY:
+        try:
+            db = get_database_connection()
+            c = db.cursor()
+            query = f"SELECT text,time FROM Messages WHERE id = {mid} and sender = 'server'"
+            c.execute(query)
+            msg = c.fetchall()
+            db.close()
+            content = list(msg[0])
+            return jsonify({'msg' : {'body' : content[0] , 'time' : content[1]} })
+
+        except Exception as e:
+            return "ERROR"
+    else:
+        return "WrongAPIKEY"
+
+
 @app.route('/insertRec' , methods  = ['GET' , 'POST'])
 @login_required
 def insertRec():
@@ -231,7 +307,7 @@ def getRecipes():
 def getRecipesById(fid):
     db = get_database_connection()
     cur = db.cursor()
-    cur.execute("SELECT id ,title, catid , pic , ing , rec , isPolling FROM Recipes WHERE id = ?" , fid)
+    cur.execute(f"SELECT id ,title, catid , pic , ing , rec , isPolling FROM Recipes WHERE id = {fid}")
     dt = cur.fetchone()
     db.close()
     return dt
@@ -250,7 +326,7 @@ def getStatic(apiKey , key , value):
                 return "OKGOTIT"
             return "WrongAPIKEY"
         except Exception as e:
-            wlog("error" , f"while we wanted to add statistics about counting recivers of recipe {value} we got this : {e}")
+            wLog("error" , f"while we wanted to add statistics about counting recivers of recipe {value} we got this : {e}")
             return "There was an error"
 
 @app.route("/editrec/<fid>" , methods = ['GET' , 'POST'])
@@ -312,8 +388,8 @@ def delFromPoll(fid):
     flash("با موفقیت از صف حذف شد" , "info")
     db = get_database_connection()
     cur = db.cursor()
-    cur.execute("Update Recipes set isPolling = 'false' where id = ?" , fid)
-    cur.execute("DELETE FROM sendPoll where id = ?" , (fid))
+    cur.execute(f"Update Recipes set isPolling = 'false' where id = {fid}")
+    cur.execute(f"DELETE FROM sendPoll where id = {fid}")
     db.commit()
     db.close()
     return redirect("/recPoll")
@@ -372,6 +448,15 @@ if __name__ == "__main__":
     token TEXT ,
     username TEXT,
     Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS Messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token TEXT ,
+    text TEXT,
+    sender TEXT,
+    time TEXT
     );
     """)
     db.close()
