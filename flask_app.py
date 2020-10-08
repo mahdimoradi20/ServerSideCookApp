@@ -10,6 +10,7 @@ from flask_login import (
 )
 import requests
 import sqlite3
+import glob
 
 
 
@@ -415,7 +416,9 @@ def saveToken(token):
     finally:
         db.close()
 
-
+@app.route("/getBannersInfo")
+def getBanners():
+    pass
 
 
 if __name__ == "__main__":
